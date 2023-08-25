@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package promise;
+
+message Promise {
+  string id = 1;
+  State state = 2;
+  Value param = 3;
+  Value value = 4;
+  int64 timeout = 5;
+}
+
+enum State {
+  PENDING = 0;
+  RESOLVED = 1;
+  REJECTED = 2;
+  REJECTED_TIMEDOUT = 3;
+  REJECTED_CANCELED = 4;
+}
+
+enum Status {
+  UNKNOWN = 0;
+  OK = 200;
+  CREATED = 201;
+  NOCONTENT = 204;
+  FORBIDDEN = 403;
+  NOTFOUND = 404;
+  CONFLICT = 409;
+}
+
+message Value {
+  map<string, string> headers = 1;
+  string ikey = 2;
+  bytes data = 3;
+}
+
+message ReadPromiseRequest {
+  string id = 1;
+}
+
+message ReadPromiseResponse {
+  Status status = 1;
+  Promise promise = 2;
+}
+
+message SearchPromisesRequest {
+  string q = 1;
+  string state = 2;
+}
+
+message SearchPromisesResponse {
+  Status status = 1;
+  repeated Promise promises = 2;
+}
+
+message CreatePromiseRequest {
+  string id = 1;
+  Value param = 2;
+  int64 timeout = 3;
+}
+
+message CreatePromiseResponse {
+  Status status = 1;
+  Promise promise = 2;
+}
+
+message CancelPromiseRequest {
+  string id = 1;
+  Value value = 2;
+}
+
+message CancelPromiseResponse {
+  Status status = 1;
+  Promise promise = 2;
+}
+
+message ResolvePromiseRequest {
+  string id = 1;
+  Value value = 2;
+}
+
+message ResolvePromiseResponse {
+  Status status = 1;
+  Promise promise = 2;
+}
+
+message RejectPromiseRequest {
+  string id = 1;
+  Value value = 2;
+}
+
+message RejectPromiseResponse {
+  Status status = 1;
+  Promise promise = 2;
+}
+
+service PromiseService {
+  // Promise
+  rpc ReadPromise(ReadPromiseRequest) returns (ReadPromiseResponse) {}
+  rpc SearchPromises(SearchPromisesRequest) returns (SearchPromisesResponse) {}
+  rpc CreatePromise(CreatePromiseRequest) returns (CreatePromiseResponse) {}
+  rpc CancelPromise(CancelPromiseRequest) returns (CancelPromiseResponse) {}
+  rpc ResolvePromise(ResolvePromiseRequest) returns (ResolvePromiseResponse) {}
+  rpc RejectPromise(RejectPromiseRequest) returns (RejectPromiseResponse) {}
+}

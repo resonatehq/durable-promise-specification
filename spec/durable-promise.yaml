@@ -1,0 +1,290 @@
+openapi: 3.0.3
+info:
+    title: Promise API
+    version: 1.0.0
+servers:
+    - url: http://localhost:8001
+paths:
+    /promises:
+        get:
+            tags:
+                - promises
+            summary: Search promises
+            operationId: searchPromises
+            parameters:
+                - name: q
+                  in: query
+                  description: Search query
+                  required: false
+                  schema:
+                      type: string
+                - name: state
+                  in: query
+                  description: State of promises
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Promises fetched successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Promise"
+    /promises/{id}:
+        get:
+            tags:
+                - promises
+            summary: Get a promise
+            operationId: getPromise
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  style: simple
+                  explode: false
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Promise fetched successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "400":
+                    description: Invalid ID supplied
+                "404":
+                    description: Promise not found
+    /promises/{id}/create:
+        post:
+            tags:
+                - promises
+            summary: Create a promise
+            operationId: createPromise
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  style: simple
+                  explode: false
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CreatePromiseRequest"
+                required: true
+            responses:
+                "200":
+                    description: Operation deduplicated, Promise fetched successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "201":
+                    description: Promise created successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "400":
+                    description: Invalid input
+                "403":
+                    description: Forbidden, Promise in incorrect state
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+    /promises/{id}/cancel:
+        post:
+            tags:
+                - promise
+            summary: Cancel a promise
+            operationId: cancelPromise
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  style: simple
+                  explode: false
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CancelPromiseRequest"
+                required: true
+            responses:
+                "200":
+                    description: Operation deduplicated, Promise fetched successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "201":
+                    description: Promise canceled successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "400":
+                    description: Invalid ID supplied or invalid payload
+                "403":
+                    description: Forbidden, Promise in incorrect state
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "404":
+                    description: Promise not found
+    /promises/{id}/resolve:
+        post:
+            tags:
+                - promises
+            summary: Resolve a promise
+            operationId: resolvePromise
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  style: simple
+                  explode: false
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ResolvePromiseRequest"
+                required: true
+            responses:
+                "200":
+                    description: Operation deduplicated, Promise fetched successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "201":
+                    description: Promise resolved successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "400":
+                    description: Invalid ID supplied or invalid payload
+                "403":
+                    description: Forbidden, Promise in incorrect state
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "404":
+                    description: Promise not found
+    /promises/{id}/reject:
+        post:
+            tags:
+                - promise
+            summary: Reject a promise
+            operationId: rejectPromise
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  style: simple
+                  explode: false
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/RejectPromiseRequest"
+                required: true
+            responses:
+                "200":
+                    description: Operation deduplicated, Promise fetched successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "201":
+                    description: Promise rejected successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "400":
+                    description: Invalid ID supplied or invalid payload
+                "403":
+                    description: Forbidden, Promise in incorrect state
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Promise"
+                "404":
+                    description: Promise not found
+components:
+    schemas:
+        Promise:
+            type: object
+            properties:
+                id:
+                    type: string
+                state:
+                    type: string
+                    enum:
+                        - PENDING
+                        - RESOLVED
+                        - REJECTED
+                        - REJECTED_CANCELED
+                        - REJECTED_TIMEDOUT
+                param:
+                    $ref: "#/components/schemas/Value"
+                value:
+                    $ref: "#/components/schemas/Value"
+                timeout:
+                    type: integer
+        Value:
+            type: object
+            properties:
+                ikey:
+                    type: string
+                data:
+                    type: string
+                headers:
+                    type: object
+                    additionalProperties:
+                        type: string
+        CreatePromiseRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                param:
+                    $ref: "#/components/schemas/Value"
+                timeout:
+                    type: integer
+                subscriptions:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/CreateSubscriptionRequest"
+        ResolvePromiseRequest:
+            type: object
+            properties:
+                value:
+                    $ref: "#/components/schemas/Value"
+        RejectPromiseRequest:
+            type: object
+            properties:
+                value:
+                    $ref: "#/components/schemas/Value"
+        CancelPromiseRequest:
+            type: object
+            properties:
+                value:
+                    $ref: "#/components/schemas/Value"
