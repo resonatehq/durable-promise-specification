@@ -2,12 +2,16 @@ syntax = "proto3";
 
 package promise;
 
+option go_package = "github.com/resonatehq/resonate/internal/app/subsystems/api/grpc/api";
+
 message Promise {
   string id = 1;
   State state = 2;
   Value param = 3;
   Value value = 4;
   int64 timeout = 5;
+  string idempotencyKeyForCreate = 6;
+  string idempotencyKeyForComplete = 7;
 }
 
 enum State {
@@ -16,6 +20,13 @@ enum State {
   REJECTED = 2;
   REJECTED_TIMEDOUT = 3;
   REJECTED_CANCELED = 4;
+}
+
+enum SearchState {
+  SEARCH_ALL = 0;
+  SEARCH_PENDING = 1;
+  SEARCH_RESOLVED = 2;
+  SEARCH_REJECTED = 3;
 }
 
 enum Status {
@@ -30,7 +41,6 @@ enum Status {
 
 message Value {
   map<string, string> headers = 1;
-  string ikey = 2;
   bytes data = 3;
 }
 
@@ -45,18 +55,23 @@ message ReadPromiseResponse {
 
 message SearchPromisesRequest {
   string q = 1;
-  string state = 2;
+  SearchState state = 2;
+  int32 limit = 3;
+  string cursor = 4;
 }
 
 message SearchPromisesResponse {
   Status status = 1;
-  repeated Promise promises = 2;
+  string cursor = 2;
+  repeated Promise promises = 3;
 }
 
 message CreatePromiseRequest {
   string id = 1;
-  Value param = 2;
-  int64 timeout = 3;
+  string idempotencyKey = 2;
+  bool strict = 3;
+  Value param = 4;
+  int64 timeout = 5;
 }
 
 message CreatePromiseResponse {
@@ -66,7 +81,9 @@ message CreatePromiseResponse {
 
 message CancelPromiseRequest {
   string id = 1;
-  Value value = 2;
+  string idempotencyKey = 2;
+  bool strict = 3;
+  Value value = 4;
 }
 
 message CancelPromiseResponse {
@@ -76,7 +93,9 @@ message CancelPromiseResponse {
 
 message ResolvePromiseRequest {
   string id = 1;
-  Value value = 2;
+  string idempotencyKey = 2;
+  bool strict = 3;
+  Value value = 4;
 }
 
 message ResolvePromiseResponse {
@@ -86,7 +105,9 @@ message ResolvePromiseResponse {
 
 message RejectPromiseRequest {
   string id = 1;
-  Value value = 2;
+  string idempotencyKey = 2;
+  bool strict = 3;
+  Value value = 4;
 }
 
 message RejectPromiseResponse {
