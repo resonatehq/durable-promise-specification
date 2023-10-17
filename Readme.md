@@ -38,7 +38,7 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   A downstream component may create a promise
 
   ```
-  Create(promise-id, idempotence-key, param, timeout)
+  Create(promise-id, idempotence-key, param, header, timeout, strict=True)
   ```
 
 - **Cancel**
@@ -46,7 +46,7 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   A downstream component can cancel an existing promise
 
   ```
-  Cancel(promise-id, idempotence-key, value)
+  Cancel(promise-id, idempotence-key, value, header, strict=True)
   ```
 
 ## Upstream API
@@ -56,7 +56,7 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   An upstream component can resolve an existing promise, signaling success
 
   ```
-  Resolve(promise-id, idempotence-key, value)
+  Resolve(promise-id, idempotence-key, value, header, strict=True)
   ```
 
 
@@ -65,11 +65,56 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   An upstream component can reject a promise, signalling failure
 
   ```
-  Reject(promise-id, idempotence-key, value)
+  Reject(promise-id, idempotence-key, value, header, strict=True)
   ```
 
 # Idempotence
 
-When creating, resolving, or rejecting a Durable Promise, use an idempotency key. An idempotency key is a client generated value which the server uses to recognize a duplicated request.
+In a distributed system, managing duplicate and racing messages is essential. When creating, resolving, or rejecting a Durable Promise, use an idempotency key. An idempotency key is a client generated value which the server uses to recognize when two different physical requests represent the same logical request.
 
-TBD
+| Current State          | Action               | Next State             | Output               |
+|------------------------|----------------------|------------------------|----------------------|
+| Init                   | Create(id, ikᶜ, T)   | Pending(id, ikᶜ, ⊥)    | OK                   |
+| Init                   | Create(id, ikᶜ, F)   | Pending(id, ikᶜ, ⊥)    | OK                   |
+| Pending(id, ikᶜ, ⊥)    | Create(id, ikᶜ, T)   | Pending(id, ikᶜ, ⊥)    | OK, Deduplicated     |
+| Pending(id, ikᶜ, ⊥)    | Create(id, ikᶜ, F)   | Pending(id, ikᶜ, ⊥)    | OK, Deduplicated     |
+| Pending(id, ikᶜ, ⊥)    | Create(id, ikᶜ’, T)  | Pending(id, ikᶜ, ⊥)    | KO, Already Pending  |
+| Pending(id, ikᶜ, ⊥)    | Create(id, ikᶜ’, F)  | Pending(id, ikᶜ, ⊥)    | KO, Already Pending  |
+| Pending(id, ikᶜ, ⊥)    | Resolve(id, ikᵘ, T)  | Resolved(id, ikᶜ, ikᵘ) | OK                   |
+| Pending(id, ikᶜ, ⊥)    | Resolve(id, ikᵘ, F)  | Resolved(id, ikᶜ, ikᵘ) | OK                   |
+| Pending(id, ikᶜ, ⊥)    | Reject(id, ikᵘ, T)   | Rejected(id, ikᶜ, ikᵘ) | OK                   |
+| Pending(id, ikᶜ, ⊥)    | Reject(id, ikᵘ, F)   | Rejected(id, ikᶜ, ikᵘ) | OK                   |
+| Pending(id, ikᶜ, ⊥)    | Cancel(id, ikᵘ, T)   | Rejected(id, ikᶜ, ikᵘ) | OK                   |
+| Pending(id, ikᶜ, ⊥)    | Cancel(id, ikᵘ, F)   | Rejected(id, ikᶜ, ikᵘ) | OK                   |
+| Resolved(id, ikᶜ, ikᵘ) | Create(id, ikᶜ, T)   | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Create(id, ikᶜ’, T)  | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Create(id, ikᶜ, F)   | Resolved(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Resolved(id, ikᶜ, ikᵘ) | Create(id, ikᶜ’, F)  | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Resolve(id, ikᵘ, T)  | Resolved(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Resolved(id, ikᶜ, ikᵘ) | Resolve(id, ikᵘ’, T) | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Resolve(id, ikᵘ, F)  | Resolved(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Resolved(id, ikᶜ, ikᵘ) | Resolve(id, ikᵘ’, F) | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Reject(id, ikᵘ, T)   | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Reject(id, ikᵘ’, T)  | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Reject(id, ikᵘ, F)   | Resolved(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Resolved(id, ikᶜ, ikᵘ) | Reject(id, ikᵘ’, F)  | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Cancel(id, ikᵘ, T)   | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Cancel(id, ikᵘ’, T)  | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Resolved(id, ikᶜ, ikᵘ) | Cancel(id, ikᵘ, F)   | Resolved(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Resolved(id, ikᶜ, ikᵘ) | Cancel(id, ikᵘ’, F)  | Resolved(id, ikᶜ, ikᵘ) | KO, Already Resolved |
+| Rejected(id, ikᶜ, ikᵘ) | Create(id, ikᶜ, T)   | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Create(id, ikᶜ’, T)  | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Create(id, ikᶜ, F)   | Rejected(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Rejected(id, ikᶜ, ikᵘ) | Create(id, ikᶜ’, F)  | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Resolve(id, ikᵘ, T)  | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Resolve(id, ikᵘ’, T) | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Resolve(id, ikᵘ, F)  | Rejected(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Rejected(id, ikᶜ, ikᵘ) | Resolve(id, ikᵘ’, F) | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Reject(id, ikᵘ, T)   | Rejected(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Rejected(id, ikᶜ, ikᵘ) | Reject(id, ikᵘ’, T)  | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Reject(id, ikᵘ, F)   | Rejected(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Rejected(id, ikᶜ, ikᵘ) | Reject(id, ikᵘ’, F)  | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Cancel(id, ikᵘ, T)   | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Cancel(id, ikᵘ’, T)  | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
+| Rejected(id, ikᶜ, ikᵘ) | Cancel(id, ikᵘ, F)   | Rejected(id, ikᶜ, ikᵘ) | OK, Deduplicated     |
+| Rejected(id, ikᶜ, ikᵘ) | Cancel(id, ikᵘ’, F)  | Rejected(id, ikᶜ, ikᵘ) | KO, Already Rejected |
