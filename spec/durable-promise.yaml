@@ -297,6 +297,14 @@ components:
                     type: string
                 idempotencyKeyForComplete:
                     type: string
+                createdOn: 
+                    type: integer 
+                completedOn: 
+                    type: integer 
+                tags: 
+                  type: object
+                  additionalProperties:
+                    type: string
         Value:
             type: object
             properties:

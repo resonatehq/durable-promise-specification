@@ -12,6 +12,9 @@ message Promise {
   int64 timeout = 5;
   string idempotencyKeyForCreate = 6;
   string idempotencyKeyForComplete = 7;
+  int64 createdOn = 8; 
+  int64 completedOn = 9; 
+  map<string, string> tags = 10; 
 }
 
 enum State {
