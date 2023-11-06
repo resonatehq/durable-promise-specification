@@ -42,9 +42,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Promise"
+                $ref: "#/components/schemas/SearchPromiseResponse"
   /promises/{id}:
     get:
       tags:
@@ -332,3 +330,13 @@ components:
             properties:
                 value:
                     $ref: "#/components/schemas/Value"
+        SearchPromiseResponse: 
+            type: object 
+            properties: 
+              cursor: 
+                type: string 
+              promises: 
+                type: array
+                items:
+                  $ref: "#/components/schemas/Promise"
+              
