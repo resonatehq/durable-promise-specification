@@ -33,13 +33,8 @@ enum SearchState {
 }
 
 enum Status {
-  UNKNOWN = 0;
   OK = 200;
   CREATED = 201;
-  NOCONTENT = 204;
-  FORBIDDEN = 403;
-  NOTFOUND = 404;
-  CONFLICT = 409;
 }
 
 message Value {
