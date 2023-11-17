@@ -42,7 +42,6 @@ message ReadPromiseRequest {
 }
 
 message ReadPromiseResponse {
-  bool wrote = 1;
   Promise promise = 2;
 }
 
@@ -54,7 +53,6 @@ message SearchPromisesRequest {
 }
 
 message SearchPromisesResponse {
-  bool wrote = 1;
   string cursor = 2;
   repeated Promise promises = 3;
 }
@@ -68,7 +66,7 @@ message CreatePromiseRequest {
 }
 
 message CreatePromiseResponse {
-  bool wrote = 1;
+  bool noop = 1;
   Promise promise = 2;
 }
 
@@ -80,7 +78,7 @@ message CancelPromiseRequest {
 }
 
 message CancelPromiseResponse {
-  bool wrote = 1;
+  bool noop = 1;
   Promise promise = 2;
 }
 
@@ -92,7 +90,7 @@ message ResolvePromiseRequest {
 }
 
 message ResolvePromiseResponse {
-  bool wrote = 1;
+  bool noop = 1;
   Promise promise = 2;
 }
 
@@ -104,7 +102,7 @@ message RejectPromiseRequest {
 }
 
 message RejectPromiseResponse {
-  bool wrote = 1;
+  bool noop = 1;
   Promise promise = 2;
 }
 
