@@ -32,16 +32,6 @@ enum SearchState {
   SEARCH_REJECTED = 3;
 }
 
-enum Status {
-  UNKNOWN = 0;
-  OK = 200;
-  CREATED = 201;
-  NOCONTENT = 204;
-  FORBIDDEN = 403;
-  NOTFOUND = 404;
-  CONFLICT = 409;
-}
-
 message Value {
   map<string, string> headers = 1;
   bytes data = 3;
@@ -52,7 +42,6 @@ message ReadPromiseRequest {
 }
 
 message ReadPromiseResponse {
-  Status status = 1;
   Promise promise = 2;
 }
 
@@ -64,7 +53,6 @@ message SearchPromisesRequest {
 }
 
 message SearchPromisesResponse {
-  Status status = 1;
   string cursor = 2;
   repeated Promise promises = 3;
 }
@@ -78,7 +66,7 @@ message CreatePromiseRequest {
 }
 
 message CreatePromiseResponse {
-  Status status = 1;
+  bool noop = 1;
   Promise promise = 2;
 }
 
@@ -90,7 +78,7 @@ message CancelPromiseRequest {
 }
 
 message CancelPromiseResponse {
-  Status status = 1;
+  bool noop = 1;
   Promise promise = 2;
 }
 
@@ -102,7 +90,7 @@ message ResolvePromiseRequest {
 }
 
 message ResolvePromiseResponse {
-  Status status = 1;
+  bool noop = 1;
   Promise promise = 2;
 }
 
@@ -114,7 +102,7 @@ message RejectPromiseRequest {
 }
 
 message RejectPromiseResponse {
-  Status status = 1;
+  bool noop = 1;
   Promise promise = 2;
 }
 
