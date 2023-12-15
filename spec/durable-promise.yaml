@@ -57,9 +57,11 @@ paths:
       tags:
         - Promises
       summary: Update promise state
-      operationId: updatePromiseState
       parameters:
         - $ref: "#/components/parameters/PathId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/StrictMode"
       requestBody:
         $ref: "#/components/requestBodies/UpdatePromiseState"
       responses:
