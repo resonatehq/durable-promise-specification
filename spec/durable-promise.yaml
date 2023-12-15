@@ -71,16 +71,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Promise"
-    delete:
-      tags:
-        - Promises
-      summary: Cancel promise
-      operationId: cancelPromise
-      parameters:
-        - $ref: "#/components/parameters/PathId"
-      responses:
-        204:
-          description: No Content
 
 components:
   parameters:
@@ -144,7 +134,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/PromiseStateUpdate"
+            $ref: "#/components/schemas/PromiseUpdate"
 
   schemas:
     Promise:
@@ -188,10 +178,17 @@ components:
         - REJECTED_TIMEDOUT
 
     PromiseStateUpdate:
+      type: string
+      enum:
+        - RESOLVED
+        - REJECTED
+        - REJECTED_CANCELED
+
+    PromiseUpdate:
       type: object
       properties:
         state:
-          $ref: "#/components/schemas/PromiseState"
+          $ref: "#/components/schemas/PromiseStateUpdate"
         value:
           $ref: "#/components/schemas/Value"
 
