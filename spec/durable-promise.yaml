@@ -1,5 +1,3 @@
-# add original + add request-id
-
 openapi: 3.0.0
 info:
   title: Promise API
@@ -12,6 +10,10 @@ paths:
         - Promises
       summary: Create a promise
       operationId: createPromise
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/StrictMode"
       requestBody:
         $ref: "#/components/requestBodies/CreatePromise"
       responses:
@@ -108,6 +110,25 @@ components:
       schema:
         type: string
 
+    IdempotencyKey:
+      name: idempotency-key
+      in: header
+      description: Deduplicates multiple requests
+      schema:
+        type: string
+    StrictMode:
+      name: strict
+      in: header
+      description: If true, deduplicates only when promise is pending
+      schema:
+        type: boolean
+    RequestId:
+      name: request-id
+      in: header
+      description: Unique ID for each request
+      schema:
+        type: string
+
   requestBodies:
     CreatePromise:
       required: true
@@ -122,34 +143,6 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/PromiseStateUpdate"
-
-  # review headers
-  headers:
-    idempotency-key:
-      description: Deduplicates multiple requests
-      schema:
-        type: string
-
-    strict:
-      description: If true, deduplicates only when promise is pending
-      schema:
-        type: boolean
-
-    request-id:
-      description: Unique ID for each request
-      schema:
-        type: string
-
-    CommonHeaders:
-      schema:
-        type: object
-        properties:
-          IdempotencyKey:
-            $ref: "#/components/headers/idempotency-key"
-          StrictMode:
-            $ref: "#/components/headers/strict"
-          RequestId:
-            $ref: "#/components/headers/request-id"
 
   schemas:
     Promise:
