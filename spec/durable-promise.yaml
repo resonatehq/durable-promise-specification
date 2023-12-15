@@ -56,7 +56,7 @@ paths:
     patch:
       tags:
         - Promises
-      summary: Complete promise state
+      summary: Complete a promise
       parameters:
         - $ref: "#/components/parameters/PathId"
         - $ref: "#/components/parameters/RequestId"
