@@ -56,14 +56,14 @@ paths:
     patch:
       tags:
         - Promises
-      summary: Update promise state
+      summary: Complete promise state
       parameters:
         - $ref: "#/components/parameters/PathId"
         - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/IdempotencyKey"
         - $ref: "#/components/parameters/StrictMode"
       requestBody:
-        $ref: "#/components/requestBodies/UpdatePromiseState"
+        $ref: "#/components/requestBodies/CompletePromise"
       responses:
         200:
           description: OK
@@ -129,12 +129,12 @@ components:
           schema:
             $ref: "#/components/schemas/Promise"
 
-    UpdatePromiseState:
+    CompletePromise:
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/PromiseUpdate"
+            $ref: "#/components/schemas/PromiseCompleteRequest"
 
   schemas:
     Promise:
@@ -177,18 +177,18 @@ components:
         - REJECTED_CANCELED
         - REJECTED_TIMEDOUT
 
-    PromiseStateUpdate:
+    PromiseStateComplete:
       type: string
       enum:
         - RESOLVED
         - REJECTED
         - REJECTED_CANCELED
 
-    PromiseUpdate:
+    PromiseCompleteRequest:
       type: object
       properties:
         state:
-          $ref: "#/components/schemas/PromiseStateUpdate"
+          $ref: "#/components/schemas/PromiseStateComplete"
         value:
           $ref: "#/components/schemas/Value"
 
