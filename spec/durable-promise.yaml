@@ -139,6 +139,7 @@ components:
           schema:
             $ref: "#/components/schemas/Promise"
 
+    # has to update state AND more ?
     UpdatePromiseState:
       required: true
       content:
@@ -192,6 +193,8 @@ components:
       properties:
         state:
           $ref: "#/components/schemas/PromiseState"
+        value:
+          $ref: "#/components/schemas/Value"
 
     Value:
       type: object
