@@ -139,6 +139,9 @@ components:
   schemas:
     Promise:
       type: object
+      required:
+        - id
+        - timeout
       properties:
         id:
           type: string
