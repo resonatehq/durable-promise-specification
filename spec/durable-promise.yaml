@@ -82,9 +82,15 @@ components:
       schema:
         type: object
         properties:
-          q:
+          id:
             type: string
-            description: Free text query string
+            description: |
+              Fuzzy search query string to find promises via fuzzy IDs. This string will be matched flexibly 
+              against IDs in the system, so it does not need to exactly match the full ID.
+
+              Some examples of valid fuzzy ID strings:
+              - "abc123*" - Would match ID "abc123def" 
+              - "pro*fil" - Would match IDs containing "pro123file"
           state:
             $ref: "#/components/schemas/PromiseState"
           limit:
