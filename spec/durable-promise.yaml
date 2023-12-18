@@ -1,350 +1,234 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
   title: Promise API
+  description: Manage promises
   version: 1.0.0
-servers:
-  - url: http://localhost:8001
 paths:
   /promises:
+    post:
+      tags:
+        - Promises
+      summary: Create a promise
+      operationId: createPromise
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/Strict"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Promise"
+      responses:
+        200:
+          description: Operation deduplicated, Promise fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Promise"
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Promise"
+        400:
+          description: Invalid request
+        403:
+          description: Forbidden request
+        409:
+          description: Promise already exists
+
     get:
       tags:
-        - promises
+        - Promises
       summary: Search promises
       operationId: searchPromises
       parameters:
-        - name: q
-          in: query
-          description: Search query
-          required: true
-          schema:
-            type: string
-        - name: state
-          in: query
-          description: State of promises
-          required: false
-          schema:
-            type: string
-        - name: limit
-          in: query
-          description: Number of promises returned per page, max 100
-          required: false
-          schema:
-            type: integer
-        - name: cursor
-          in: query
-          description: Cursor for the next page of the query, overrides other query parameters
-          required: false
-          schema:
-            type: string
+        - $ref: "#/components/parameters/QueryFilters"
       responses:
-        "200":
-          description: Promises fetched successfully
+        200:
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SearchPromiseResponse"
+                $ref: "#/components/schemas/PromiseList"
+        400:
+          description: Invalid request
+
   /promises/{id}:
     get:
       tags:
-        - promises
+        - Promises
       summary: Get a promise
       operationId: getPromise
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/Id"
       responses:
-        "200":
-          description: Promise fetched successfully
+        200:
+          description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Promise"
-        "400":
-          description: Invalid ID supplied
-        "404":
+        400:
+          description: Invalid request
+        404:
           description: Promise not found
-  /promises/{id}/create:
-    post:
+
+    patch:
       tags:
-        - promises
-      summary: Create a promise
-      operationId: createPromise
-      headers:
-        idempotency-key:
-          description: Deduplicates multiple requests
-          required: false
-          schema:
-            type: string
-        strict:
-          description: If true, deduplicates only when promise is pending
-          required: false
-          schema:
-            type: boolean
+        - Promises
+      summary: Complete a promise
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/Strict"
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreatePromiseRequest"
-        required: true
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+              $ref: "#/components/schemas/PromiseCompleteRequest"
       responses:
-        "200":
-          description: Operation deduplicated, Promise fetched successfully
+        200:
+          description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Promise"
-        "201":
-          description: Promise created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "400":
-          description: Invalid input
-        "403":
-          description: Forbidden, Promise in incorrect state
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-  /promises/{id}/cancel:
-    post:
-      tags:
-        - promises
-      summary: Cancel a promise
-      operationId: cancelPromise
-      headers:
-        idempotency-key:
-          description: Deduplicates multiple requests
-          required: false
-          schema:
-            type: string
-        strict:
-          description: If true, deduplicates only when promise is canceled
-          required: false
-          schema:
-            type: boolean
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CancelPromiseRequest"
-        required: true
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Operation deduplicated, Promise fetched successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "201":
-          description: Promise canceled successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "400":
-          description: Invalid ID supplied or invalid payload
-        "403":
-          description: Forbidden, Promise in incorrect state
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "404":
+        400:
+          description: Invalid request
+        403:
+          description: Forbidden request
+        404:
           description: Promise not found
-  /promises/{id}/resolve:
-    post:
-      tags:
-        - promises
-      summary: Resolve a promise
-      operationId: resolvePromise
-      headers:
-        idempotency-key:
-          description: Deduplicates multiple requests
-          required: false
-          schema:
-            type: string
-        strict:
-          description: If true, deduplicates only when promise is resolved
-          required: false
-          schema:
-            type: boolean
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ResolvePromiseRequest"
-        required: true
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Operation deduplicated, Promise fetched successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "201":
-          description: Promise resolved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "400":
-          description: Invalid ID supplied or invalid payload
-        "403":
-          description: Forbidden, Promise in incorrect state
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "404":
-          description: Promise not found
-  /promises/{id}/reject:
-    post:
-      tags:
-        - promises
-      summary: Reject a promise
-      operationId: rejectPromise
-      headers:
-        idempotency-key:
-          description: Deduplicates multiple requests
-          required: false
-          schema:
-            type: string
-        strict:
-          description: If true, deduplicates only when promise is rejected
-          required: false
-          schema:
-            type: boolean
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RejectPromiseRequest"
-        required: true
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Operation deduplicated, Promise fetched successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "201":
-          description: Promise rejected successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "400":
-          description: Invalid ID supplied or invalid payload
-        "403":
-          description: Forbidden, Promise in incorrect state
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Promise"
-        "404":
-          description: Promise not found
+
 components:
-    schemas:
-        Promise:
-            type: object
-            properties:
-                id:
-                    type: string
-                state:
-                    type: string
-                    enum:
-                        - PENDING
-                        - RESOLVED
-                        - REJECTED
-                        - REJECTED_CANCELED
-                        - REJECTED_TIMEDOUT
-                param:
-                    $ref: "#/components/schemas/Value"
-                value:
-                    $ref: "#/components/schemas/Value"
-                timeout:
-                    type: integer
-                idempotencyKeyForCreate:
-                    type: string
-                idempotencyKeyForComplete:
-                    type: string
-                createdOn: 
-                    type: integer 
-                completedOn: 
-                    type: integer 
-                tags: 
-                  type: object
-                  additionalProperties:
-                    type: string
-        Value:
-            type: object
-            properties:
-                data:
-                    type: string
-                headers:
-                    type: object
-                    additionalProperties:
-                        type: string
-        CreatePromiseRequest:
-            type: object
-            properties:
-                id:
-                    type: string
-                param:
-                    $ref: "#/components/schemas/Value"
-                timeout:
-                    type: integer
-        ResolvePromiseRequest:
-            type: object
-            properties:
-                value:
-                    $ref: "#/components/schemas/Value"
-        RejectPromiseRequest:
-            type: object
-            properties:
-                value:
-                    $ref: "#/components/schemas/Value"
-        CancelPromiseRequest:
-            type: object
-            properties:
-                value:
-                    $ref: "#/components/schemas/Value"
-        SearchPromiseResponse: 
-            type: object 
-            properties: 
-              cursor: 
-                type: string 
-              promises: 
-                type: array
-                items:
-                  $ref: "#/components/schemas/Promise"
-              
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: The promise ID
+      schema:
+        type: string
+    IdempotencyKey:
+      name: idempotency-key
+      in: header
+      description: Deduplicates multiple requests
+      schema:
+        type: string
+    Strict:
+      name: strict
+      in: header
+      description: If true, deduplicates only when promise is pending
+      schema:
+        type: boolean
+    RequestId:
+      name: request-id
+      in: header
+      description: Unique ID for each request
+      schema:
+        type: string
+    QueryFilters:
+      name: filters
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: object
+        properties:
+          id:
+            type: string
+            description: |
+              Fuzzy search query string to find promises via fuzzy IDs. This string will be matched flexibly 
+              against IDs in the system, so it does not need to exactly match the full ID.
+
+              Some examples of valid fuzzy ID strings:
+              - "abc123*" - Would match ID "abc123def" 
+              - "pro*fil" - Would match IDs containing "pro123file"
+          state:
+            $ref: "#/components/schemas/PromiseState"
+          limit:
+            type: integer
+            description: Number of results
+          cursor:
+            type: string
+            description: Cursor for pagination
+
+  schemas:
+    Promise:
+      type: object
+      required:
+        - id
+        - timeout
+      properties:
+        id:
+          type: string
+        state:
+          $ref: "#/components/schemas/PromiseState"
+        param:
+          $ref: "#/components/schemas/Value"
+        value:
+          $ref: "#/components/schemas/Value"
+        timeout:
+          type: integer
+          format: int64
+        idempotencyKeyForCreate:
+          type: string
+          readOnly: true
+        idempotencyKeyForComplete:
+          type: string
+          readOnly: true
+        createdOn:
+          type: integer
+          readOnly: true
+        completedOn:
+          type: integer
+          readOnly: true
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+
+    PromiseState:
+      type: string
+      enum:
+        - PENDING
+        - RESOLVED
+        - REJECTED
+        - REJECTED_CANCELED
+        - REJECTED_TIMEDOUT
+
+    PromiseStateComplete:
+      type: string
+      enum:
+        - RESOLVED
+        - REJECTED
+        - REJECTED_CANCELED
+
+    PromiseCompleteRequest:
+      type: object
+      properties:
+        state:
+          $ref: "#/components/schemas/PromiseStateComplete"
+        value:
+          $ref: "#/components/schemas/Value"
+
+    Value:
+      type: object
+      properties:
+        data:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+
+    PromiseList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Promise"
