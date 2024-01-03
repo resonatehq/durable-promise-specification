@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package promise;
 
+option go_package = "github.com/resonatehq/resonate/internal/app/subsystems/api/grpc/api";
+
 message Promise {
   string id = 1;
   State state = 2;
@@ -111,7 +113,7 @@ message RejectPromiseResponse {
   Promise promise = 2;
 }
 
-service PromiseService {
+service Promises {
   // Promise
   rpc ReadPromise(ReadPromiseRequest) returns (ReadPromiseResponse) {}
   rpc SearchPromises(SearchPromisesRequest) returns (SearchPromisesResponse) {}
