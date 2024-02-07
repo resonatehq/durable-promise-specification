@@ -1,4 +1,4 @@
-# Durable Promises
+# Durable Promise Specification
 
 **Keywords**
 
@@ -38,7 +38,7 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   A downstream component may create a promise
 
   ```
-  Create(promise-id, idempotence-key, param, header, timeout, strict=True)
+  Create(promise-id, idempotency-key, param, header, timeout, strict=True)
   ```
 
 - **Cancel**
@@ -46,7 +46,7 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   A downstream component can cancel an existing promise
 
   ```
-  Cancel(promise-id, idempotence-key, value, header, strict=True)
+  Cancel(promise-id, idempotency-key, value, header, strict)
   ```
 
 ## Upstream API
@@ -56,7 +56,7 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   An upstream component can resolve an existing promise, signaling success
 
   ```
-  Resolve(promise-id, idempotence-key, value, header, strict=True)
+  Resolve(promise-id, idempotency-key, value, header, strict)
   ```
 
 
@@ -65,7 +65,7 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   An upstream component can reject a promise, signalling failure
 
   ```
-  Reject(promise-id, idempotence-key, value, header, strict=True)
+  Reject(promise-id, idempotency-key, value, header, strict)
   ```
 
 # Idempotence
