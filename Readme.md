@@ -17,7 +17,7 @@ A **promise**, also called future, awaitable, or deferred is a representation of
 
 ![Promise](./img/Promise.jpg)
 
-A promise is a coordination primitive: In a typical scenario, a downstream function execution creates a promise and awaits its completion. An upstream function execution either resolves or rejects the promise. On completion, the downstream execution resumes with the value of the promise. 
+A promise is a coordination primitive: In a typical scenario, a downstream function execution creates a promise and awaits its completion. An upstream function execution either resolves or rejects the promise. On completion, the downstream execution resumes with the value of the promise.
 
 ![Promise API](./img/PromiseAPI.jpg)
 
@@ -35,34 +35,48 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
 
 - **Create**
 
-  A downstream component may create a promise
+  A downstream component may create a promise.
 
   ```
-  Create(promise-id, idempotency-key, param, header, timeout, strict=True)
+  Create(promise-id, idempotency-key, param, header, timeout, strict)
   ```
 
 - **Cancel**
 
-  A downstream component can cancel an existing promise
+  A downstream component can cancel an existing promise.
 
   ```
   Cancel(promise-id, idempotency-key, value, header, strict)
   ```
 
+- **Callback**
+
+  A downstream component can register a callback on an existing promise.
+
+  ```
+  Callback(promise-id, root-promise-id, timeout, recv)
+  ```
+
+  A recv specifies the transport on which the callback will occur. Below is a non-exhaustive list of supported receivers.
+
+  | Type | Data                                               | Shorthand          |
+  | ---- | -------------------------------------------------- | ------------------ |
+  | poll | {"group": "string", "id": "string"}                | poll://group:id    |
+  | http | {"headers": {"string": "string"}, "url": "string"} | http://example.com |
+
 ## Upstream API
 
 - **Resolve**
 
-  An upstream component can resolve an existing promise, signaling success
+  An upstream component can resolve an existing promise, signaling success.
 
   ```
   Resolve(promise-id, idempotency-key, value, header, strict)
   ```
 
-
 - **Reject**
 
-  An upstream component can reject a promise, signalling failure
+  An upstream component can reject a promise, signalling failure.
 
   ```
   Reject(promise-id, idempotency-key, value, header, strict)
@@ -398,4 +412,3 @@ In a distributed system, managing duplicate and racing messages is essential. Wh
 | 322 | Timedout(id, ikc, ⊥)   | Cancel(id, ⊥, F)       | Timedout(id, ikc, ⊥)   | OK, Deduplicated       |
 | 323 | Timedout(id, ikc, ⊥)   | Cancel(id, iku, T)     | Timedout(id, ikc, ⊥)   | KO, Already Timedout   |
 | 324 | Timedout(id, ikc, ⊥)   | Cancel(id, iku, F)     | Timedout(id, ikc, ⊥)   | OK, Deduplicated       |
-
