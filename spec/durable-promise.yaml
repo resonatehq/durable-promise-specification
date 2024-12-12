@@ -177,11 +177,14 @@ paths:
             schema:
               type: object
               required:
+                - id
                 - promiseId
                 - rootPromiseId
                 - timeout
                 - recv
               properties:
+                id:
+                  type: string
                 promiseId:
                   type: string
                 rootPromiseId:

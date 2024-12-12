@@ -54,7 +54,7 @@ Logically, the Application Programming Interface (API) is divided in two parts, 
   A downstream component can register a callback on an existing promise.
 
   ```
-  Callback(promise-id, root-promise-id, timeout, recv)
+  Callback(id, promise-id, root-promise-id, timeout, recv)
   ```
 
   A recv specifies the transport on which the callback will occur. Below is a non-exhaustive list of supported receivers.
