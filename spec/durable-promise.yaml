@@ -1,28 +1,58 @@
 openapi: 3.0.0
 info:
-  title: Promise API
-  description: Manage promises
+  title: Durable Promise
   version: 1.0.0
+  license:
+    name: Apache 2.0
+    url: https://opensource.org/license/apache-2-0
+
 paths:
   /promises:
     post:
       tags:
         - Promises
-      summary: Create a promise
+      summary: Create promise
       operationId: createPromise
       parameters:
-        - $ref: "#/components/parameters/RequestIdHeader"
-        - $ref: "#/components/parameters/IdempotencyKeyHeader"
-        - $ref: "#/components/parameters/StrictHeader"
+        - in: header
+          name: request-id
+          description: Unique tracking id
+          schema:
+            type: string
+        - in: header
+          name: idempotency-key
+          description: Deduplicates requests
+          schema:
+            type: string
+        - in: header
+          name: strict
+          description: If true, deduplicates only when promise state matches the request
+          schema:
+            type: boolean
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreatePromiseReq"
+              type: object
+              required:
+                - id
+                - timeout
+              properties:
+                id:
+                  type: string
+                timeout:
+                  type: integer
+                  format: int64
+                param:
+                  $ref: "#/components/schemas/Value"
+                tags:
+                  type: object
+                  additionalProperties:
+                    type: string
       responses:
         200:
-          description: Operation deduplicated, Promise fetched successfully
+          description: Operation deduplicated, promise fetched successfully
           content:
             application/json:
               schema:
@@ -40,70 +70,24 @@ paths:
         409:
           description: Promise already exists
 
-    get:
-      tags:
-        - Promises
-      summary: Search promises
-      operationId: searchPromises
-      parameters:
-        - $ref: "#/components/parameters/RequestIdHeader"
-        - name: id
-          in: query
-          description: |
-            Search promises for matching IDs, can include wildcards.
-
-            For example:
-            - "foo/*" matches all IDs starting with "foo/"
-            - "*/bar" matches all IDs starting with "bar/"
-            - "foo/*/bar" matches all IDs starting with "foo/" and ending with "/bar"
-          schema:
-            type: string
-        - name: state
-          in: query
-          description: Search promises for matching states
-          schema:
-            type: string
-            enum:
-              - pending
-              - resolved
-              - rejected
-        - name: tags
-          in: query
-          style: deepObject
-          explode: true
-          schema:
-            type: object
-            additionalProperties:
-              type: string
-        - name: limit
-          in: query
-          description: Number of results
-          schema:
-            type: integer
-        - name: cursor
-          in: query
-          description: Cursor for pagination
-          schema:
-            type: string
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SearchPromisesResp"
-        400:
-          description: Invalid request
-
   /promises/{id}:
     get:
       tags:
         - Promises
-      summary: Get a promise
-      operationId: getPromise
+      summary: Read promise
+      operationId: readPromise
       parameters:
-        - $ref: "#/components/parameters/IdPath"
-        - $ref: "#/components/parameters/RequestIdHeader"
+        - in: path
+          name: id
+          required: true
+          description: The promise id
+          schema:
+            type: string
+        - in: header
+          name: request-id
+          description: Unique tracking id
+          schema:
+            type: string
       responses:
         200:
           description: OK
@@ -119,18 +103,47 @@ paths:
     patch:
       tags:
         - Promises
-      summary: Complete a promise
+      summary: Complete promise
+      operationId: completePromise
       parameters:
-        - $ref: "#/components/parameters/IdPath"
-        - $ref: "#/components/parameters/RequestIdHeader"
-        - $ref: "#/components/parameters/IdempotencyKeyHeader"
-        - $ref: "#/components/parameters/StrictHeader"
+        - in: path
+          name: id
+          required: true
+          description: The promise id
+          schema:
+            type: string
+        - in: header
+          name: request-id
+          description: Unique tracking id
+          schema:
+            type: string
+        - in: header
+          name: idempotency-key
+          description: Deduplicates requests
+          schema:
+            type: string
+        - in: header
+          name: strict
+          description: If true, deduplicates only when promise state matches the request
+          schema:
+            type: boolean
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CompletePromiseReq"
+              type: object
+              required:
+                - state
+              properties:
+                state:
+                  type: string
+                  enum:
+                    - RESOLVED
+                    - REJECTED
+                    - REJECTED_CANCELED
+                value:
+                  $ref: "#/components/schemas/Value"
       responses:
         200:
           description: OK
@@ -145,37 +158,67 @@ paths:
         404:
           description: Promise not found
 
+  /callbacks:
+    post:
+      tags:
+        - Callbacks
+      summary: Create callback
+      operationId: createCallback
+      parameters:
+        - in: header
+          name: request-id
+          description: Unique tracking id
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - promiseId
+                - rootPromiseId
+                - timeout
+                - recv
+              properties:
+                id:
+                  type: string
+                promiseId:
+                  type: string
+                rootPromiseId:
+                  type: string
+                timeout:
+                  type: integer
+                  format: int64
+                recv:
+                  $ref: "#/components/schemas/Recv"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  promise:
+                    $ref: "#/components/schemas/Promise"
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  callback:
+                    $ref: "#/components/schemas/Callback"
+                  promise:
+                    $ref: "#/components/schemas/Promise"
+        404:
+          description: Promise not found
+
 components:
-  parameters:
-    # PATH PARAMETERS
-    IdPath:
-      name: id
-      in: path
-      required: true
-      description: The promise ID
-      schema:
-        type: string
-
-    # HEADER PARAMETERS
-    IdempotencyKeyHeader:
-      name: idempotency-key
-      in: header
-      description: Deduplicates multiple requests
-      schema:
-        type: string
-    StrictHeader:
-      name: strict
-      in: header
-      description: If true, deduplicates only when promise state matches the request
-      schema:
-        type: boolean
-    RequestIdHeader:
-      name: request-id
-      in: header
-      description: Unique ID for each request
-      schema:
-        type: string
-
   schemas:
     Promise:
       type: object
@@ -190,51 +233,39 @@ components:
         id:
           type: string
         state:
-          $ref: "#/components/schemas/PromiseState"
-        param:
-          $ref: "#/components/schemas/PromiseValue"
-        value:
-          $ref: "#/components/schemas/PromiseValue"
+          type: string
+          enum:
+            - PENDING
+            - RESOLVED
+            - REJECTED
+            - REJECTED_CANCELED
+            - REJECTED_TIMEDOUT
         timeout:
           type: integer
           format: int64
+        param:
+          $ref: "#/components/schemas/Value"
+        value:
+          $ref: "#/components/schemas/Value"
+        tags:
+          type: object
+          additionalProperties:
+            type: string
         idempotencyKeyForCreate:
           type: string
           readOnly: true
         idempotencyKeyForComplete:
           type: string
           readOnly: true
-        tags:
-          type: object
-          additionalProperties:
-            type: string
         createdOn:
           type: integer
-          readOnly: true
+          format: int64
         completedOn:
           type: integer
-          readOnly: true
+          format: int64
 
-    PromiseState:
-      type: string
-      enum:
-        - PENDING
-        - RESOLVED
-        - REJECTED
-        - REJECTED_CANCELED
-        - REJECTED_TIMEDOUT
-
-    PromiseStateComplete:
-      type: string
-      enum:
-        - RESOLVED
-        - REJECTED
-        - REJECTED_CANCELED
-
-    PromiseValue:
+    Value:
       type: object
-      required:
-        - headers
       properties:
         headers:
           type: object
@@ -243,40 +274,34 @@ components:
         data:
           type: string
 
-    CreatePromiseReq:
+    Callback:
       type: object
       required:
         - id
+        - promiseId
         - timeout
       properties:
         id:
           type: string
+        promiseId:
+          type: string
         timeout:
           type: integer
           format: int64
-        param:
-          $ref: "#/components/schemas/PromiseValue"
-        tags:
-          type: object
-          additionalProperties:
-            type: string
+        createdOn:
+          type: integer
+          format: int64
 
-    CompletePromiseReq:
-      type: object
-      required:
-        - state
-      properties:
-        state:
-          $ref: "#/components/schemas/PromiseStateComplete"
-        value:
-          $ref: "#/components/schemas/PromiseValue"
-
-    SearchPromisesResp:
-      type: object
-      properties:
-        cursor:
-          type: string
-        promises:
-          type: array
-          items:
-            $ref: "#/components/schemas/Promise"
+    Recv:
+      oneOf:
+        - type: object
+          required:
+            - type
+            - data
+          properties:
+            type:
+              type: string
+            data:
+              type: object
+              additionalProperties: true
+        - type: string
