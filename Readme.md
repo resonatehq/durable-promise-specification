@@ -34,9 +34,7 @@ The canonical specification document is at:
 
 ## Test harness
 
-A conformance test suite that validates any server implementation against this specification is available at:
-
-[github.com/resonatehq/durable-promise-test-harness](https://github.com/resonatehq/durable-promise-test-harness)
+A historical conformance test suite paired with the legacy Go server is preserved at [github.com/resonatehq/legacy-durable-promise-test-harness](https://github.com/resonatehq/legacy-durable-promise-test-harness). It is archived and exercises the legacy REST API; the current Resonate server uses an RPC envelope contract not covered by this harness.
 
 ## SDKs that implement this specification
 
